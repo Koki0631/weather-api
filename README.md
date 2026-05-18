@@ -1,27 +1,27 @@
 # Weather API
 
-FastAPI で構築した天気情報 API です。[Open-Meteo](https://open-meteo.com/) を利用して都市名から現在の天気を返します。
+A small [FastAPI](https://fastapi.tiangolo.com/) service that returns current weather by city name using [Open-Meteo](https://open-meteo.com/) (geocoding + forecast). No API key is required.
 
-## 技術スタック
+## Stack
 
 - Python 3.12 / FastAPI
-- パッケージ管理: [uv](https://docs.astral.sh/uv/)
-- フォーマット: black
-- テスト: pytest
-- コンテナ: Docker / docker-compose
+- Package manager: [uv](https://docs.astral.sh/uv/)
+- Formatter: black
+- Tests: pytest
+- Containers: Docker / Docker Compose
 - CI: GitHub Actions
 
-## ディレクトリ構成
+## Layout
 
 ```
 .
 ├── app/
-│   ├── main.py           # FastAPI アプリケーション
-│   ├── config.py         # 環境変数・設定
-│   ├── schemas.py        # レスポンスモデル
-│   ├── dependencies.py   # DI
-│   ├── routers/          # エンドポイント
-│   └── services/         # 外部 API 連携
+│   ├── main.py           # FastAPI application
+│   ├── config.py         # Settings / environment
+│   ├── schemas.py        # Response models
+│   ├── dependencies.py   # Dependency injection
+│   ├── routers/          # HTTP routes
+│   └── services/         # External API clients
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -29,65 +29,64 @@ FastAPI で構築した天気情報 API です。[Open-Meteo](https://open-meteo
 └── Makefile
 ```
 
-## セットアップ
+## Setup
 
-### 前提
+### Prerequisites
 
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) がインストール済みであること
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) installed
 
-### ローカル開発
+### Local development
 
 ```bash
-# 依存関係のインストール
 make install
 
-# pre-commit（任意）
+# Optional: pre-commit hooks
 make pre-commit
 ```
 
-## 起動方法
+## Run
 
-### Docker Compose（推奨）
+### Docker Compose (recommended)
 
 ```bash
 make run
 ```
 
-`http://localhost:8000` で API が起動します。Swagger UI は `http://localhost:8000/docs` です。
+The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:8000/docs`.
 
-### ローカル（uv）
+### Local (uv)
 
 ```bash
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## テスト方法
+## Tests
 
 ```bash
 make test
 ```
 
-フォーマット確認:
+Check formatting:
 
 ```bash
 make lint
 ```
 
-自動フォーマット:
+Format code:
 
 ```bash
 make format
 ```
 
-## API 実行例
+## API example
 
-### リクエスト
+### Request
 
 ```bash
 curl "http://localhost:8000/weather?city=osaka"
 ```
 
-### レスポンス（例）
+### Sample response
 
 ```json
 {
@@ -99,33 +98,36 @@ curl "http://localhost:8000/weather?city=osaka"
 }
 ```
 
-### エラー例
+### Error example
 
-都市が見つからない場合（404）:
+City not found (404):
 
 ```bash
 curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz"
 ```
 
-## 環境変数
+## Environment variables
 
-| 変数名 | 必須 | 説明 |
-|--------|------|------|
-| `OPEN_METEO_GEOCODING_BASE_URL` | いいえ | ジオコーディング API のベース URL |
-| `OPEN_METEO_FORECAST_BASE_URL` | いいえ | 天気予報 API のベース URL |
+All are optional; defaults match the public Open-Meteo endpoints.
 
-## Makefile コマンド
+| Variable | Description |
+|----------|-------------|
+| `OPEN_METEO_GEOCODING_BASE_URL` | Base URL for the geocoding API |
+| `OPEN_METEO_FORECAST_BASE_URL` | Base URL for the forecast API |
+| `REQUEST_TIMEOUT_SECONDS` | HTTP client timeout (seconds) |
 
-| コマンド | 説明 |
-|----------|------|
-| `make run` | docker-compose で起動 |
-| `make test` | pytest 実行 |
-| `make lint` | black チェック |
-| `make format` | black でフォーマット |
-| `make install` | 依存関係インストール |
-| `make pre-commit` | pre-commit フック登録 |
+## Makefile targets
 
-## GitHub への段階的コミット例
+| Target | Description |
+|--------|-------------|
+| `make run` | Start the stack with Docker Compose |
+| `make test` | Run pytest |
+| `make lint` | Run black in check mode |
+| `make format` | Format with black |
+| `make install` | Install dependencies (including dev) |
+| `make pre-commit` | Install pre-commit hooks |
+
+## Example incremental commits
 
 ```bash
 git init
