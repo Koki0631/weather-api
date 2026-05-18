@@ -1,7 +1,7 @@
 [project]
 name = "weather-api"
 version = "0.1.0"
-description = "FastAPI weather API backed by OpenWeatherMap"
+description = "FastAPI weather API backed by Open-Meteo"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
