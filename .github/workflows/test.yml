@@ -27,3 +27,6 @@ jobs:
 
       - name: Check formatting
         run: uv run black --check app tests
+
+      - name: Lint with Ruff
+        run: uv run ruff check app tests

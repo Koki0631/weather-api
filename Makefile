@@ -1,4 +1,4 @@
-.PHONY: run test lint format install pre-commit
+.PHONY: run test lint format ruff install pre-commit
 
 run:
 	docker compose up --build
@@ -11,6 +11,9 @@ lint:
 
 format:
 	uv run black app tests
+
+ruff:
+	uv run ruff check app tests
 
 install:
 	uv sync --group dev
