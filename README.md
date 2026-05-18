@@ -1,6 +1,6 @@
 # Weather API
 
-FastAPI で構築した天気情報 API です。[OpenWeatherMap](https://openweathermap.org/api) を利用して都市名から現在の天気を返します。
+FastAPI で構築した天気情報 API です。[Open-Meteo](https://open-meteo.com/) を利用して都市名から現在の天気を返します。
 
 ## 技術スタック
 
@@ -34,17 +34,12 @@ FastAPI で構築した天気情報 API です。[OpenWeatherMap](https://openwe
 ### 前提
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) がインストール済みであること
-- [OpenWeatherMap](https://home.openweathermap.org/api_keys) で API キーを取得していること
 
 ### ローカル開発
 
 ```bash
 # 依存関係のインストール
 make install
-
-# 環境変数
-cp .env.example .env
-# .env に OPENWEATHER_API_KEY を設定
 
 # pre-commit（任意）
 make pre-commit
@@ -55,9 +50,6 @@ make pre-commit
 ### Docker Compose（推奨）
 
 ```bash
-cp .env.example .env
-# .env に OPENWEATHER_API_KEY を設定
-
 make run
 ```
 
@@ -119,8 +111,8 @@ curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz"
 
 | 変数名 | 必須 | 説明 |
 |--------|------|------|
-| `OPENWEATHER_API_KEY` | はい | OpenWeatherMap API キー |
-| `OPENWEATHER_BASE_URL` | いいえ | API ベース URL（デフォルト: OpenWeatherMap v2.5） |
+| `OPEN_METEO_GEOCODING_BASE_URL` | いいえ | ジオコーディング API のベース URL |
+| `OPEN_METEO_FORECAST_BASE_URL` | いいえ | 天気予報 API のベース URL |
 
 ## Makefile コマンド
 

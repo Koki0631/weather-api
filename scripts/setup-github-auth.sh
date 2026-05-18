@@ -13,7 +13,12 @@ if [[ "${1:-}" == "--token" ]]; then
   echo "Paste a GitHub Personal Access Token (scopes: repo, read:org, gist), then press Ctrl-D:"
   gh auth login --hostname "$HOST" --git-protocol "$PROTOCOL" --with-token --insecure-storage
 else
-  gh auth login --hostname "$HOST" --git-protocol "$PROTOCOL" --web --skip-ssh-key
+  gh auth login \
+    --hostname "$HOST" \
+    --git-protocol "$PROTOCOL" \
+    --web \
+    --skip-ssh-key \
+    --scopes "repo,read:org,gist,workflow"
 fi
 
 gh auth setup-git

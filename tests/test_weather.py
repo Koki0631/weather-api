@@ -9,16 +9,29 @@ from app.dependencies import get_weather_service
 from app.main import app
 from app.services.weather import WeatherService
 
-OPENWEATHER_FIXTURE = {
-    "main": {"temp": 22.5, "humidity": 65},
-    "wind": {"speed": 3.2},
-    "weather": [{"description": "clear sky"}],
+GEOCODING_FIXTURE = {
+    "results": [
+        {
+            "name": "Osaka",
+            "latitude": 34.6937,
+            "longitude": 135.5023,
+        }
+    ]
+}
+
+FORECAST_FIXTURE = {
+    "current": {
+        "temperature_2m": 22.5,
+        "relative_humidity_2m": 65,
+        "wind_speed_10m": 3.2,
+        "weather_code": 0,
+    }
 }
 
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(openweather_api_key="test-key")
+    return Settings()
 
 
 @pytest.fixture
@@ -39,8 +52,10 @@ async def api_client(settings: Settings):
 @pytest.mark.asyncio
 async def test_get_weather_success(api_client):
     client, mock_http = api_client
-    mock_response = httpx.Response(200, json=OPENWEATHER_FIXTURE)
-    mock_http.get.return_value = mock_response
+    mock_http.get.side_effect = [
+        httpx.Response(200, json=GEOCODING_FIXTURE),
+        httpx.Response(200, json=FORECAST_FIXTURE),
+    ]
 
     response = await client.get("/weather", params={"city": "osaka"})
 
@@ -52,27 +67,33 @@ async def test_get_weather_success(api_client):
         "humidity": 65,
         "wind_speed_mps": 3.2,
     }
-    mock_http.get.assert_awaited_once()
-    call_kwargs = mock_http.get.await_args.kwargs
-    assert call_kwargs["params"]["q"] == "osaka"
-    assert call_kwargs["params"]["units"] == "metric"
+    assert mock_http.get.await_count == 2
+
+    geocoding_call = mock_http.get.await_args_list[0]
+    assert geocoding_call.kwargs["params"]["name"] == "osaka"
+
+    forecast_call = mock_http.get.await_args_list[1]
+    assert forecast_call.kwargs["params"]["latitude"] == 34.6937
+    assert forecast_call.kwargs["params"]["longitude"] == 135.5023
+    assert forecast_call.kwargs["params"]["wind_speed_unit"] == "ms"
 
 
 @pytest.mark.asyncio
 async def test_get_weather_city_not_found(api_client):
     client, mock_http = api_client
-    mock_http.get.return_value = httpx.Response(404, json={"cod": "404"})
+    mock_http.get.return_value = httpx.Response(200, json={"results": []})
 
     response = await client.get("/weather", params={"city": "unknown-city"})
 
     assert response.status_code == 404
     assert "City not found" in response.json()["detail"]
+    mock_http.get.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_get_weather_upstream_error(api_client):
     client, mock_http = api_client
-    mock_http.get.return_value = httpx.Response(500, json={"cod": "500"})
+    mock_http.get.return_value = httpx.Response(500, json={})
 
     response = await client.get("/weather", params={"city": "osaka"})
 
