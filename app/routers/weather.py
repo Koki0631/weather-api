@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.auth.deps import get_current_user
 from app.dependencies import get_weather_service
 from app.schemas import WeatherHistoryResponse, WeatherResponse
 from app.services.weather import (
@@ -15,10 +16,11 @@ router = APIRouter(tags=["weather"])
 @router.get("/weather", response_model=WeatherResponse)
 async def get_weather(
     city: str = Query(..., min_length=1, description="City name (e.g. osaka)"),
+    user_id: int = Depends(get_current_user),
     service: WeatherService = Depends(get_weather_service),
 ) -> WeatherResponse:
     try:
-        return await service.get_weather(city=city)
+        return await service.get_weather(city=city, user_id=user_id)
     except CityNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except UpstreamWeatherError as exc:
@@ -31,9 +33,10 @@ async def get_weather_history(
     limit: int = Query(
         10, ge=1, le=100, description="Maximum number of records to return"
     ),
+    user_id: int = Depends(get_current_user),
     service: WeatherService = Depends(get_weather_service),
 ) -> WeatherHistoryResponse:
     try:
-        return service.get_weather_history(city=city, limit=limit)
+        return service.get_weather_history(city=city, user_id=user_id, limit=limit)
     except DatabaseUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
