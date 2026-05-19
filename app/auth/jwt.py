@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from jose import jwt
+from jose import JWTError, jwt
 
 from app.config import get_settings
 
@@ -23,3 +23,10 @@ def create_access_token(user_id: int) -> str:
         "exp": expire,
     }
     return jwt.encode(payload, _get_secret_key(), algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict:
+    return jwt.decode(token, _get_secret_key(), algorithms=[ALGORITHM])
+
+
+__all__ = ["ALGORITHM", "JWTError", "create_access_token", "decode_access_token"]
