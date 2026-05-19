@@ -4,11 +4,13 @@ from fastapi import FastAPI
 
 from app.db import init_db
 from app.routers import auth, weather
+from app.seed import seed_test_user
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    seed_test_user()
     yield
 
 

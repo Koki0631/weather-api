@@ -60,12 +60,12 @@ class WeatherService:
     client: httpx.AsyncClient
     repository: WeatherRepository | None = None
 
-    async def get_weather(self, city: str) -> WeatherResponse:
+    async def get_weather(self, city: str, user_id: int) -> WeatherResponse:
         latitude, longitude = await self._resolve_coordinates(city)
         weather = await self._fetch_current_weather(
             city=city, latitude=latitude, longitude=longitude
         )
-        self._persist_weather(weather)
+        self._persist_weather(weather, user_id=user_id)
         return weather
 
     def get_weather_history(
@@ -83,7 +83,7 @@ class WeatherService:
             items=[_record_to_history_item(record) for record in records],
         )
 
-    def _persist_weather(self, weather: WeatherResponse) -> None:
+    def _persist_weather(self, weather: WeatherResponse, *, user_id: int) -> None:
         if self.repository is None:
             return
 
@@ -94,11 +94,13 @@ class WeatherService:
                 description=weather.description,
                 humidity=weather.humidity,
                 wind_speed_mps=weather.wind_speed_mps,
+                user_id=user_id,
             )
         except Exception:
             logger.exception(
-                "Failed to persist weather for city=%s; continuing without DB",
+                "Failed to persist weather for city=%s user_id=%s; continuing without DB",
                 weather.city,
+                user_id,
             )
 
     async def _resolve_coordinates(self, city: str) -> tuple[float, float]:

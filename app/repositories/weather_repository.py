@@ -18,7 +18,7 @@ class WeatherRepository:
         description: str,
         humidity: int,
         wind_speed_mps: float,
-        user_id: int | None = None,
+        user_id: int,
     ) -> WeatherRecord:
         record = WeatherRecord(
             user_id=user_id,

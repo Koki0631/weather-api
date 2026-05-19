@@ -25,18 +25,11 @@ def db_session() -> Session:
 
 def test_save_weather_inserts_new_record(db_session: Session) -> None:
     repo = WeatherRepository(db_session)
-    record = repo.save_weather(**SAMPLE_WEATHER)
+    record = repo.save_weather(**SAMPLE_WEATHER, user_id=1)
 
     assert record.id is not None
-    assert record.user_id is None
+    assert record.user_id == 1
     assert record.city == "osaka"
-
-
-def test_save_weather_inserts_with_user_id(db_session: Session) -> None:
-    repo = WeatherRepository(db_session)
-    record = repo.save_weather(**SAMPLE_WEATHER, user_id=7)
-
-    assert record.user_id == 7
 
 
 def test_list_by_city_and_user_filters_records(db_session: Session) -> None:

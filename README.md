@@ -61,7 +61,7 @@ The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:
 
 The API container runs **uvicorn with `--reload`** and mounts `./app` into the container, so edits under `app/` are picked up automatically without rebuilding or restarting. Re-run `docker compose up --build` only when you change dependencies (`pyproject.toml` / `uv.lock`) or the `Dockerfile`.
 
-This starts **MySQL** (`db`) and the **API** (`api`). Each successful `/weather` response is inserted into the `weather` table using the same fields as the JSON body (`city`, `temperature_celsius`, `description`, `humidity`, `wind_speed_mps`), plus `created_at`. Repeated requests on the same day create new rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
+This starts **MySQL** (`db`) and the **API** (`api`). On startup the API seeds a **dev test user** (see [Login](#login)). Each authenticated `/weather` response is inserted into the `weather` table for that user (`user_id` plus the same fields as the JSON body). Repeated requests create new history rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
 
 ### Local (uv)
 
@@ -99,8 +99,12 @@ make ruff
 
 ### Request
 
+Requires a valid JWT from `POST /auth/login`.
+
 ```bash
-curl "http://localhost:8000/weather?city=osaka"
+TOKEN="..."  # from POST /auth/login
+curl "http://localhost:8000/weather?city=osaka" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Sample response
@@ -120,7 +124,8 @@ curl "http://localhost:8000/weather?city=osaka"
 City not found (404):
 
 ```bash
-curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz"
+curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Weather history
@@ -164,13 +169,22 @@ Sample response:
 
 ### Login
 
-Authenticate with email and password. Returns a JWT (valid for 7 days). Requires a user row in the `users` table (registration endpoint not implemented yet).
+Authenticate with email and password. Returns a JWT (valid for 7 days).
+
+With **Docker Compose**, a test user is created on API startup (`SEED_TEST_USER=true`):
+
+| Field | Default |
+|-------|---------|
+| Email | `test@example.com` |
+| Password | `testpassword` |
 
 ```bash
-curl -X POST "http://localhost:8000/auth/login" \
+curl -s -X POST "http://localhost:8000/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"your-password"}'
+  -d '{"email":"test@example.com","password":"testpassword"}'
 ```
+
+Save the `access_token` from the response for `/weather` and `/weather/history` requests.
 
 Sample response:
 
@@ -192,6 +206,9 @@ All are optional; defaults match the public Open-Meteo endpoints.
 | `REQUEST_TIMEOUT_SECONDS` | HTTP client timeout (seconds) |
 | `DATABASE_URL` | SQLAlchemy URL (default: local MySQL) |
 | `DATABASE_ENABLED` | Set to `false` to skip persistence (e.g. tests) |
+| `SEED_TEST_USER` | If `true`, create `TEST_USER_EMAIL` on startup when missing (Docker Compose default) |
+| `TEST_USER_EMAIL` | Email for the seeded dev user (default: `test@example.com`) |
+| `TEST_USER_PASSWORD` | Plain password for the seeded dev user (default: `testpassword`) |
 | `SECRET_KEY` | JWT signing secret (set a strong value in production) |
 
 ### MySQL (Docker Compose defaults)

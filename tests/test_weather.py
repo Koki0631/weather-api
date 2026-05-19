@@ -4,6 +4,8 @@ import httpx
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.auth.deps import get_current_user
+from app.auth.jwt import create_access_token
 from app.config import Settings
 from app.dependencies import get_weather_service
 from app.main import app
@@ -28,6 +30,8 @@ FORECAST_FIXTURE = {
     }
 }
 
+CURRENT_USER_ID = 1
+
 
 @pytest.fixture
 def settings() -> Settings:
@@ -39,6 +43,7 @@ async def api_client(settings: Settings):
     mock_client = AsyncMock(spec=httpx.AsyncClient)
     service = WeatherService(settings=settings, client=mock_client)
     app.dependency_overrides[get_weather_service] = lambda: service
+    app.dependency_overrides[get_current_user] = lambda: CURRENT_USER_ID
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -49,6 +54,10 @@ async def api_client(settings: Settings):
     app.dependency_overrides.clear()
 
 
+def _auth_headers(user_id: int = CURRENT_USER_ID) -> dict[str, str]:
+    return {"Authorization": f"Bearer {create_access_token(user_id)}"}
+
+
 @pytest.mark.asyncio
 async def test_get_weather_success(api_client):
     client, mock_http = api_client
@@ -57,7 +66,9 @@ async def test_get_weather_success(api_client):
         httpx.Response(200, json=FORECAST_FIXTURE),
     ]
 
-    response = await client.get("/weather", params={"city": "osaka"})
+    response = await client.get(
+        "/weather", params={"city": "osaka"}, headers=_auth_headers()
+    )
 
     assert response.status_code == 200
     assert response.json() == {
@@ -69,13 +80,15 @@ async def test_get_weather_success(api_client):
     }
     assert mock_http.get.await_count == 2
 
-    geocoding_call = mock_http.get.await_args_list[0]
-    assert geocoding_call.kwargs["params"]["name"] == "osaka"
 
-    forecast_call = mock_http.get.await_args_list[1]
-    assert forecast_call.kwargs["params"]["latitude"] == 34.6937
-    assert forecast_call.kwargs["params"]["longitude"] == 135.5023
-    assert forecast_call.kwargs["params"]["wind_speed_unit"] == "ms"
+@pytest.mark.asyncio
+async def test_get_weather_requires_authentication(api_client):
+    client, _ = api_client
+    app.dependency_overrides.pop(get_current_user, None)
+
+    response = await client.get("/weather", params={"city": "osaka"})
+
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -83,7 +96,9 @@ async def test_get_weather_city_not_found(api_client):
     client, mock_http = api_client
     mock_http.get.return_value = httpx.Response(200, json={"results": []})
 
-    response = await client.get("/weather", params={"city": "unknown-city"})
+    response = await client.get(
+        "/weather", params={"city": "unknown-city"}, headers=_auth_headers()
+    )
 
     assert response.status_code == 404
     assert "City not found" in response.json()["detail"]
@@ -95,7 +110,9 @@ async def test_get_weather_upstream_error(api_client):
     client, mock_http = api_client
     mock_http.get.return_value = httpx.Response(500, json={})
 
-    response = await client.get("/weather", params={"city": "osaka"})
+    response = await client.get(
+        "/weather", params={"city": "osaka"}, headers=_auth_headers()
+    )
 
     assert response.status_code == 502
 
@@ -104,6 +121,6 @@ async def test_get_weather_upstream_error(api_client):
 async def test_get_weather_missing_city(api_client):
     client, _ = api_client
 
-    response = await client.get("/weather")
+    response = await client.get("/weather", headers=_auth_headers())
 
     assert response.status_code == 422

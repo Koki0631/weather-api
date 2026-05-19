@@ -10,8 +10,8 @@ class WeatherRecord(Base):
     __tablename__ = "weather"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=True, index=True
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False, index=True
     )
     city: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     temperature_celsius: Mapped[float] = mapped_column(Float, nullable=False)

@@ -16,10 +16,11 @@ router = APIRouter(tags=["weather"])
 @router.get("/weather", response_model=WeatherResponse)
 async def get_weather(
     city: str = Query(..., min_length=1, description="City name (e.g. osaka)"),
+    user_id: int = Depends(get_current_user),
     service: WeatherService = Depends(get_weather_service),
 ) -> WeatherResponse:
     try:
-        return await service.get_weather(city=city)
+        return await service.get_weather(city=city, user_id=user_id)
     except CityNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except UpstreamWeatherError as exc:
