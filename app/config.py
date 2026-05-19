@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = 10.0
     database_url: str = "mysql+pymysql://weather:weather@localhost:3306/weather"
     database_enabled: bool = True
+    secret_key: str = "dev-only-set-secret-key-in-env"
 
 
 @lru_cache
