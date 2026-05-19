@@ -98,7 +98,8 @@ class WeatherService:
             )
         except Exception:
             logger.exception(
-                "Failed to persist weather for city=%s user_id=%s; continuing without DB",
+                "Failed to persist weather for city=%s user_id=%s; "
+                "continuing without DB",
                 weather.city,
                 user_id,
             )

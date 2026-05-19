@@ -1,9 +1,8 @@
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.db import Base
-from app.models.weather import WeatherRecord
 from app.repositories.weather_repository import WeatherRepository
 
 SAMPLE_WEATHER = {
