@@ -58,7 +58,7 @@ make run
 
 The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:8000/docs`.
 
-This starts **MySQL** (`db`) and the **API** (`api`). Successful `/weather` responses are upserted into the `weather` table (same city and calendar day → update). If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
+This starts **MySQL** (`db`) and the **API** (`api`). Successful `/weather` responses are upserted into the `weather` table using the same fields as the JSON body (`city`, `temperature_celsius`, `description`, `humidity`, `wind_speed_mps`), plus `created_at` for same-day upserts. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
 
 ### Local (uv)
 

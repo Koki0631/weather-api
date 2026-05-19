@@ -68,11 +68,7 @@ class WeatherService:
             return
 
         try:
-            self.repository.upsert_weather(
-                city=weather.city,
-                temperature=weather.temperature_celsius,
-                description=weather.description,
-            )
+            self.repository.upsert_weather(weather)
         except Exception:
             logger.exception(
                 "Failed to persist weather for city=%s; continuing without DB",
