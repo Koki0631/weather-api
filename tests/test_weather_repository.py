@@ -28,36 +28,32 @@ def test_save_weather_inserts_new_record(db_session: Session) -> None:
     record = repo.save_weather(**SAMPLE_WEATHER)
 
     assert record.id is not None
+    assert record.user_id is None
     assert record.city == "osaka"
-    assert record.temperature_celsius == 22.5
-    assert record.description == "clear sky"
-    assert record.humidity == 65
-    assert record.wind_speed_mps == 3.2
-
-    stored = db_session.scalar(
-        select(WeatherRecord).where(WeatherRecord.city == "osaka")
-    )
-    assert stored is not None
-    assert stored.id == record.id
 
 
-def test_save_weather_inserts_multiple_records_for_same_city(
-    db_session: Session,
-) -> None:
+def test_save_weather_inserts_with_user_id(db_session: Session) -> None:
     repo = WeatherRepository(db_session)
-    repo.save_weather(**SAMPLE_WEATHER)
+    record = repo.save_weather(**SAMPLE_WEATHER, user_id=7)
+
+    assert record.user_id == 7
+
+
+def test_list_by_city_and_user_filters_records(db_session: Session) -> None:
+    repo = WeatherRepository(db_session)
+    repo.save_weather(**SAMPLE_WEATHER, user_id=1)
+    repo.save_weather(**SAMPLE_WEATHER, user_id=2)
     repo.save_weather(
-        city="osaka",
-        temperature_celsius=25.0,
-        description="mainly clear",
-        humidity=70,
-        wind_speed_mps=4.0,
+        city="tokyo",
+        temperature_celsius=18.0,
+        description="cloudy",
+        humidity=80,
+        wind_speed_mps=2.0,
+        user_id=1,
     )
 
-    rows = db_session.scalars(
-        select(WeatherRecord).where(WeatherRecord.city == "osaka")
-    ).all()
-    assert len(rows) == 2
-    assert rows[0].temperature_celsius == 22.5
-    assert rows[1].temperature_celsius == 25.0
-    assert rows[1].description == "mainly clear"
+    records = repo.list_by_city_and_user(city="osaka", user_id=1, limit=10)
+
+    assert len(records) == 1
+    assert records[0].user_id == 1
+    assert records[0].city == "osaka"

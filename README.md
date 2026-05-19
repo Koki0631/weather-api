@@ -125,10 +125,12 @@ curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz"
 
 ### Weather history
 
-Returns stored records from MySQL for a city (newest first). Requires a running database (`DATABASE_ENABLED=true`).
+Returns stored records from MySQL for the **authenticated user** and city (newest first). Requires a valid JWT (`Authorization: Bearer ...`) and a running database (`DATABASE_ENABLED=true`).
 
 ```bash
-curl "http://localhost:8000/weather/history?city=osaka&limit=10"
+TOKEN="..."  # from POST /auth/login
+curl "http://localhost:8000/weather/history?city=osaka&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 Sample response:
@@ -136,6 +138,7 @@ Sample response:
 ```json
 {
   "city": "osaka",
+  "user_id": 1,
   "items": [
     {
       "id": 2,

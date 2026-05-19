@@ -68,13 +68,18 @@ class WeatherService:
         self._persist_weather(weather)
         return weather
 
-    def get_weather_history(self, city: str, limit: int = 10) -> WeatherHistoryResponse:
+    def get_weather_history(
+        self, city: str, user_id: int, limit: int = 10
+    ) -> WeatherHistoryResponse:
         if self.repository is None:
             raise DatabaseUnavailableError("Database is not available")
 
-        records = self.repository.list_by_city(city=city, limit=limit)
+        records = self.repository.list_by_city_and_user(
+            city=city, user_id=user_id, limit=limit
+        )
         return WeatherHistoryResponse(
             city=city,
+            user_id=user_id,
             items=[_record_to_history_item(record) for record in records],
         )
 

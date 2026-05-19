@@ -43,6 +43,7 @@ class TokenResponse(BaseModel):
 
 class WeatherHistoryResponse(BaseModel):
     city: str = Field(..., description="City filter applied to the query")
+    user_id: int = Field(..., description="Authenticated user ID")
     items: list[WeatherHistoryItem] = Field(
         default_factory=list,
         description="Stored weather records, newest first",

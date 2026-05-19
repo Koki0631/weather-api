@@ -18,8 +18,10 @@ class WeatherRepository:
         description: str,
         humidity: int,
         wind_speed_mps: float,
+        user_id: int | None = None,
     ) -> WeatherRecord:
         record = WeatherRecord(
+            user_id=user_id,
             city=city,
             temperature_celsius=temperature_celsius,
             description=description,
@@ -37,10 +39,15 @@ class WeatherRepository:
             self._session.rollback()
             raise
 
-    def list_by_city(self, *, city: str, limit: int) -> list[WeatherRecord]:
+    def list_by_city_and_user(
+        self, *, city: str, user_id: int, limit: int
+    ) -> list[WeatherRecord]:
         statement = (
             select(WeatherRecord)
-            .where(WeatherRecord.city == city)
+            .where(
+                WeatherRecord.city == city,
+                WeatherRecord.user_id == user_id,
+            )
             .order_by(WeatherRecord.created_at.desc())
             .limit(limit)
         )
