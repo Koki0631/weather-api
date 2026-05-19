@@ -5,15 +5,14 @@ from sqlalchemy.orm import Session
 from app.db import Base
 from app.models.weather import WeatherRecord
 from app.repositories.weather_repository import WeatherRepository
-from app.schemas import WeatherResponse
 
-SAMPLE_WEATHER = WeatherResponse(
-    city="osaka",
-    temperature_celsius=22.5,
-    description="clear sky",
-    humidity=65,
-    wind_speed_mps=3.2,
-)
+SAMPLE_WEATHER = {
+    "city": "osaka",
+    "temperature_celsius": 22.5,
+    "description": "clear sky",
+    "humidity": 65,
+    "wind_speed_mps": 3.2,
+}
 
 
 @pytest.fixture
@@ -26,32 +25,34 @@ def db_session() -> Session:
 
 def test_save_weather_inserts_new_record(db_session: Session) -> None:
     repo = WeatherRepository(db_session)
-    repo.save_weather(SAMPLE_WEATHER)
+    record = repo.save_weather(**SAMPLE_WEATHER)
 
-    record = db_session.scalar(
-        select(WeatherRecord).where(WeatherRecord.city == "osaka")
-    )
-    assert record is not None
+    assert record.id is not None
+    assert record.city == "osaka"
     assert record.temperature_celsius == 22.5
     assert record.description == "clear sky"
     assert record.humidity == 65
     assert record.wind_speed_mps == 3.2
+
+    stored = db_session.scalar(
+        select(WeatherRecord).where(WeatherRecord.city == "osaka")
+    )
+    assert stored is not None
+    assert stored.id == record.id
 
 
 def test_save_weather_inserts_multiple_records_for_same_city(
     db_session: Session,
 ) -> None:
     repo = WeatherRepository(db_session)
-    repo.save_weather(SAMPLE_WEATHER)
-    updated = SAMPLE_WEATHER.model_copy(
-        update={
-            "temperature_celsius": 25.0,
-            "description": "mainly clear",
-            "humidity": 70,
-            "wind_speed_mps": 4.0,
-        }
+    repo.save_weather(**SAMPLE_WEATHER)
+    repo.save_weather(
+        city="osaka",
+        temperature_celsius=25.0,
+        description="mainly clear",
+        humidity=70,
+        wind_speed_mps=4.0,
     )
-    repo.save_weather(updated)
 
     rows = db_session.scalars(
         select(WeatherRecord).where(WeatherRecord.city == "osaka")
