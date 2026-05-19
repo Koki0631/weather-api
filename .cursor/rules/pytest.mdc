@@ -1,0 +1,23 @@
+---
+description: Pytest conventions for API and repository tests
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Testing
+
+- Use **pytest** with **pytest-asyncio** (`asyncio_mode = auto` in `pyproject.toml`).
+- API tests: `httpx.ASGITransport` + `AsyncClient`, override `app.dependency_overrides` to mock HTTP or services.
+- Repository tests: in-memory **SQLite** (`sqlite:///:memory:`), not MySQL.
+- CI/local API tests: `DATABASE_ENABLED=false` is set in `tests/conftest.py` — do not require a running DB for router tests.
+
+## When adding features
+
+- Add tests for: success, validation errors (422), not-found (404), upstream failure (502) where applicable.
+- Mock external HTTP with `unittest.mock.AsyncMock` and `httpx.Response`; avoid real Open-Meteo calls in unit tests.
+- Assert response JSON matches the Pydantic schema fields exactly.
+
+## Keep tests readable
+
+- Name tests `test_<behavior>_<condition>`.
+- One logical assertion focus per test when possible; shared fixtures in `conftest.py`.
