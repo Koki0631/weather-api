@@ -59,6 +59,8 @@ make run
 
 The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:8000/docs`.
 
+The API container runs **uvicorn with `--reload`** and mounts `./app` into the container, so edits under `app/` are picked up automatically without rebuilding or restarting. Re-run `docker compose up --build` only when you change dependencies (`pyproject.toml` / `uv.lock`) or the `Dockerfile`.
+
 This starts **MySQL** (`db`) and the **API** (`api`). Each successful `/weather` response is inserted into the `weather` table using the same fields as the JSON body (`city`, `temperature_celsius`, `description`, `humidity`, `wind_speed_mps`), plus `created_at`. Repeated requests on the same day create new rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
 
 ### Local (uv)

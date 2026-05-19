@@ -22,6 +22,21 @@ services:
     environment:
       DATABASE_URL: mysql+pymysql://weather:weather@db:3306/weather
       DATABASE_ENABLED: "true"
+    volumes:
+      # Mount source so code edits apply without rebuilding the image
+      - ./app:/app/app
+    command:
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - app
     depends_on:
       db:
         condition: service_healthy
