@@ -1,9 +1,13 @@
+import logging
 from dataclasses import dataclass
 
 import httpx
 
 from app.config import Settings
+from app.repositories.weather_repository import WeatherRepository
 from app.schemas import WeatherResponse
+
+logger = logging.getLogger(__name__)
 
 WMO_WEATHER_DESCRIPTIONS: dict[int, str] = {
     0: "clear sky",
@@ -49,12 +53,27 @@ class UpstreamWeatherError(Exception):
 class WeatherService:
     settings: Settings
     client: httpx.AsyncClient
+    repository: WeatherRepository | None = None
 
     async def get_weather(self, city: str) -> WeatherResponse:
         latitude, longitude = await self._resolve_coordinates(city)
-        return await self._fetch_current_weather(
+        weather = await self._fetch_current_weather(
             city=city, latitude=latitude, longitude=longitude
         )
+        self._persist_weather(weather)
+        return weather
+
+    def _persist_weather(self, weather: WeatherResponse) -> None:
+        if self.repository is None:
+            return
+
+        try:
+            self.repository.save_weather(weather)
+        except Exception:
+            logger.exception(
+                "Failed to persist weather for city=%s; continuing without DB",
+                weather.city,
+            )
 
     async def _resolve_coordinates(self, city: str) -> tuple[float, float]:
         url = f"{self.settings.open_meteo_geocoding_base_url}/search"

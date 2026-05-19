@@ -1,5 +1,27 @@
 services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: weather
+      MYSQL_USER: weather
+      MYSQL_PASSWORD: weather
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   api:
     build: .
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://weather:weather@db:3306/weather
+      DATABASE_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy

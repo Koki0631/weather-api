@@ -10,6 +10,7 @@ A small [FastAPI](https://fastapi.tiangolo.com/) service that returns current we
 - Linter: Ruff (lint only; formatting stays with black)
 - Tests: pytest
 - Containers: Docker / Docker Compose
+- Database: MySQL (optional persistence via SQLAlchemy)
 - CI: GitHub Actions
 
 ## Layout
@@ -21,8 +22,11 @@ A small [FastAPI](https://fastapi.tiangolo.com/) service that returns current we
 │   ├── config.py         # Settings / environment
 │   ├── schemas.py        # Response models
 │   ├── dependencies.py   # Dependency injection
+│   ├── db.py             # SQLAlchemy engine and sessions
+│   ├── models/           # ORM models
+│   ├── repositories/   # Database access
 │   ├── routers/          # HTTP routes
-│   └── services/         # External API clients
+│   └── services/         # Business logic and external APIs
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -54,6 +58,8 @@ make run
 ```
 
 The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:8000/docs`.
+
+This starts **MySQL** (`db`) and the **API** (`api`). Each successful `/weather` response is inserted into the `weather` table using the same fields as the JSON body (`city`, `temperature_celsius`, `description`, `humidity`, `wind_speed_mps`), plus `created_at`. Repeated requests on the same day create new rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
 
 ### Local (uv)
 
@@ -124,6 +130,18 @@ All are optional; defaults match the public Open-Meteo endpoints.
 | `OPEN_METEO_GEOCODING_BASE_URL` | Base URL for the geocoding API |
 | `OPEN_METEO_FORECAST_BASE_URL` | Base URL for the forecast API |
 | `REQUEST_TIMEOUT_SECONDS` | HTTP client timeout (seconds) |
+| `DATABASE_URL` | SQLAlchemy URL (default: local MySQL) |
+| `DATABASE_ENABLED` | Set to `false` to skip persistence (e.g. tests) |
+
+### MySQL (Docker Compose defaults)
+
+| Setting | Value |
+|---------|-------|
+| Host | `db` (from API container) / `localhost` (from host) |
+| Port | `3306` |
+| Database | `weather` |
+| User / password | `weather` / `weather` |
+| Root password | `rootpassword` |
 
 ## Makefile targets
 
