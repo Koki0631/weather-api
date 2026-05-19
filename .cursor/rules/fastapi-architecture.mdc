@@ -1,0 +1,61 @@
+---
+description: Layered FastAPI architecture and coding style for this project
+alwaysApply: true
+---
+
+# Weather API — project conventions
+
+Beginner-friendly FastAPI backend. Prefer simple, readable code over abstractions.
+
+## Layered architecture
+
+Flow: **router → service → repository → DB** (external APIs called from services).
+
+| Layer | Location | Responsibility |
+|-------|----------|----------------|
+| Router | `app/routers/` | HTTP, query/path params, status codes, `Depends` wiring |
+| Service | `app/services/` | Business logic, Open-Meteo calls, orchestration |
+| Repository | `app/repositories/` | SQLAlchemy queries only |
+| Schema | `app/schemas.py` | Pydantic request/response models |
+| Model | `app/models/` | SQLAlchemy ORM tables |
+| DB | `app/db.py` | Engine, sessions, `get_db` |
+
+### Do
+
+- Keep routers thin: call service methods, map domain errors to `HTTPException`.
+- Inject dependencies via `app/dependencies.py` (`Settings`, `httpx.AsyncClient`, repositories).
+- Use **async** `httpx` for external APIs; **sync SQLAlchemy** sessions for MySQL (existing pattern).
+- Add **type hints** on all new functions and methods.
+- Use **Pydantic schemas** for every API response (`response_model=...`).
+- Persist via repository after a successful external fetch; DB failures must not break the API response (log and continue).
+
+### Do not
+
+- Put SQL or `Session` usage in routers.
+- Put business rules in repositories (only data access).
+- Change existing response schemas unless explicitly requested.
+- Introduce extra layers (e.g. generic base classes, DI frameworks) without a clear need.
+
+## Coding style
+
+- Match existing naming, imports, and file layout.
+- Minimal diffs: only change what the task requires.
+- Comments only for non-obvious behavior.
+
+## Documentation
+
+- Update `README.md` for new endpoints or notable setup changes (example request + sample JSON).
+
+## Example (new endpoint)
+
+```python
+# router: delegate only
+@router.get("/example", response_model=ExampleResponse)
+async def get_example(
+    service: ExampleService = Depends(get_example_service),
+) -> ExampleResponse:
+    return await service.get_example()
+
+# service: logic + external API
+# repository: session.add / query / commit
+```
