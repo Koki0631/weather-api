@@ -14,8 +14,8 @@ Flow: **router → service → repository → DB** (external APIs called from se
 | Layer | Location | Responsibility |
 |-------|----------|----------------|
 | Router | `app/routers/` | HTTP, query/path params, status codes, `Depends` wiring |
-| Service | `app/services/` | Business logic, Open-Meteo calls, orchestration |
-| Repository | `app/repositories/` | SQLAlchemy queries only |
+| Service | `app/services/` | Orchestrate repositories + external APIs; map ORM → Pydantic for responses |
+| Repository | `app/repositories/` | SQLAlchemy `select()` queries; return ORM models only |
 | Schema | `app/schemas.py` | Pydantic request/response models |
 | Model | `app/models/` | SQLAlchemy ORM tables |
 | DB | `app/db.py` | Engine, sessions, `get_db` |
@@ -29,10 +29,31 @@ Flow: **router → service → repository → DB** (external APIs called from se
 - Use **Pydantic schemas** for every API response (`response_model=...`).
 - Persist via repository after a successful external fetch; DB failures must not break the API response (log and continue).
 
+### Repositories & services
+
+- **Repositories** return **ORM models** (`app/models/`), not Pydantic schemas. Build API payloads in the service layer.
+- **Services** orchestrate repositories and external APIs (e.g. Open-Meteo), then produce `app/schemas.py` responses.
+- Prefer **SQLAlchemy 2.x `select()` style** in repositories (not legacy `session.query()`).
+
+```python
+# repository — data access only
+from sqlalchemy import select
+
+record = session.scalar(select(WeatherRecord).where(WeatherRecord.city == city))
+
+# service — Pydantic for HTTP, ORM from repo
+return WeatherResponse(
+    city=record.city,
+    temperature_celsius=record.temperature_celsius,
+    ...
+)
+```
+
 ### Do not
 
 - Put SQL or `Session` usage in routers.
 - Put business rules in repositories (only data access).
+- Return Pydantic models from repositories or put HTTP/API logic in repositories.
 - Change existing response schemas unless explicitly requested.
 - Introduce extra layers (e.g. generic base classes, DI frameworks) without a clear need.
 
