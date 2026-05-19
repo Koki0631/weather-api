@@ -7,6 +7,7 @@ A small [FastAPI](https://fastapi.tiangolo.com/) service that returns current we
 - Python 3.12 / FastAPI
 - Package manager: [uv](https://docs.astral.sh/uv/)
 - Formatter: black
+- Linter: Ruff (lint only; formatting stays with black)
 - Tests: pytest
 - Containers: Docker / Docker Compose
 - Database: MySQL (optional persistence via SQLAlchemy)
@@ -84,6 +85,14 @@ Format code:
 make format
 ```
 
+### Ruff (linting)
+
+[Ruff](https://docs.astral.sh/ruff/) checks `app` and `tests` for common issues. It does not replace black; run both before opening a PR.
+
+```bash
+make ruff
+```
+
 ## API example
 
 ### Request
@@ -142,6 +151,7 @@ All are optional; defaults match the public Open-Meteo endpoints.
 | `make test` | Run pytest |
 | `make lint` | Run black in check mode |
 | `make format` | Format with black |
+| `make ruff` | Run Ruff linter |
 | `make install` | Install dependencies (including dev) |
 | `make pre-commit` | Install pre-commit hooks |
 
