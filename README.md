@@ -121,6 +121,42 @@ City not found (404):
 curl -i "http://localhost:8000/weather?city=not-a-real-city-xyz"
 ```
 
+### Weather history
+
+Returns stored records from MySQL for a city (newest first). Requires a running database (`DATABASE_ENABLED=true`).
+
+```bash
+curl "http://localhost:8000/weather/history?city=osaka&limit=10"
+```
+
+Sample response:
+
+```json
+{
+  "city": "osaka",
+  "items": [
+    {
+      "id": 2,
+      "city": "osaka",
+      "temperature_celsius": 25.0,
+      "description": "mainly clear",
+      "humidity": 70,
+      "wind_speed_mps": 4.0,
+      "created_at": "2026-05-19T12:00:00+00:00"
+    },
+    {
+      "id": 1,
+      "city": "osaka",
+      "temperature_celsius": 22.5,
+      "description": "clear sky",
+      "humidity": 65,
+      "wind_speed_mps": 3.2,
+      "created_at": "2026-05-19T11:00:00+00:00"
+    }
+  ]
+}
+```
+
 ## Environment variables
 
 All are optional; defaults match the public Open-Meteo endpoints.

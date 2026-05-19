@@ -4,8 +4,9 @@ from dataclasses import dataclass
 import httpx
 
 from app.config import Settings
+from app.models.weather import WeatherRecord
 from app.repositories.weather_repository import WeatherRepository
-from app.schemas import WeatherResponse
+from app.schemas import WeatherHistoryItem, WeatherHistoryResponse, WeatherResponse
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,10 @@ class UpstreamWeatherError(Exception):
     pass
 
 
+class DatabaseUnavailableError(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class WeatherService:
     settings: Settings
@@ -62,6 +67,16 @@ class WeatherService:
         )
         self._persist_weather(weather)
         return weather
+
+    def get_weather_history(self, city: str, limit: int = 10) -> WeatherHistoryResponse:
+        if self.repository is None:
+            raise DatabaseUnavailableError("Database is not available")
+
+        records = self.repository.list_by_city(city=city, limit=limit)
+        return WeatherHistoryResponse(
+            city=city,
+            items=[_record_to_history_item(record) for record in records],
+        )
 
     def _persist_weather(self, weather: WeatherResponse) -> None:
         if self.repository is None:
@@ -148,3 +163,15 @@ class WeatherService:
             humidity=int(current["relative_humidity_2m"]),
             wind_speed_mps=float(current["wind_speed_10m"]),
         )
+
+
+def _record_to_history_item(record: WeatherRecord) -> WeatherHistoryItem:
+    return WeatherHistoryItem(
+        id=record.id,
+        city=record.city,
+        temperature_celsius=record.temperature_celsius,
+        description=record.description,
+        humidity=record.humidity,
+        wind_speed_mps=record.wind_speed_mps,
+        created_at=record.created_at,
+    )
