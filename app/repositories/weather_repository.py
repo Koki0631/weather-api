@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.weather import WeatherRecord
@@ -35,3 +36,12 @@ class WeatherRepository:
         except Exception:
             self._session.rollback()
             raise
+
+    def list_by_city(self, *, city: str, limit: int) -> list[WeatherRecord]:
+        statement = (
+            select(WeatherRecord)
+            .where(WeatherRecord.city == city)
+            .order_by(WeatherRecord.created_at.desc())
+            .limit(limit)
+        )
+        return list(self._session.scalars(statement).all())
