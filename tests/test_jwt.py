@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from jose import jwt
 
-from app.auth.jwt import ALGORITHM, ACCESS_TOKEN_EXPIRE_DAYS, create_access_token
+from app.auth.jwt import ACCESS_TOKEN_EXPIRE_DAYS, ALGORITHM, create_access_token
 from app.config import get_settings
 
 

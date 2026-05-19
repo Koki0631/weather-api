@@ -29,6 +29,18 @@ class WeatherHistoryItem(BaseModel):
     created_at: datetime = Field(..., description="When the record was stored")
 
 
+class LoginRequest(BaseModel):
+    email: str = Field(..., min_length=1, description="User email address")
+    password: str = Field(..., min_length=1, description="Plain-text password")
+
+
+class TokenResponse(BaseModel):
+    access_token: str = Field(..., description="JWT access token")
+    token_type: str = Field(
+        default="bearer", description="Token type for Authorization header"
+    )
+
+
 class WeatherHistoryResponse(BaseModel):
     city: str = Field(..., description="City filter applied to the query")
     items: list[WeatherHistoryItem] = Field(

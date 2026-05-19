@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.db import get_db
+from app.repositories.user_repository import UserRepository
 from app.repositories.weather_repository import WeatherRepository
+from app.services.auth import AuthService
 from app.services.weather import WeatherService
 
 
@@ -23,6 +25,21 @@ def get_weather_repository(
     if not settings.database_enabled or db is None:
         return None
     return WeatherRepository(db)
+
+
+def get_user_repository(
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[Session | None, Depends(get_db)],
+) -> UserRepository | None:
+    if not settings.database_enabled or db is None:
+        return None
+    return UserRepository(db)
+
+
+def get_auth_service(
+    user_repository: Annotated[UserRepository | None, Depends(get_user_repository)],
+) -> AuthService:
+    return AuthService(user_repository=user_repository)
 
 
 def get_weather_service(

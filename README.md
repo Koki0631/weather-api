@@ -159,6 +159,25 @@ Sample response:
 }
 ```
 
+### Login
+
+Authenticate with email and password. Returns a JWT (valid for 7 days). Requires a user row in the `users` table (registration endpoint not implemented yet).
+
+```bash
+curl -X POST "http://localhost:8000/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"your-password"}'
+```
+
+Sample response:
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
 ## Environment variables
 
 All are optional; defaults match the public Open-Meteo endpoints.
@@ -170,6 +189,7 @@ All are optional; defaults match the public Open-Meteo endpoints.
 | `REQUEST_TIMEOUT_SECONDS` | HTTP client timeout (seconds) |
 | `DATABASE_URL` | SQLAlchemy URL (default: local MySQL) |
 | `DATABASE_ENABLED` | Set to `false` to skip persistence (e.g. tests) |
+| `SECRET_KEY` | JWT signing secret (set a strong value in production) |
 
 ### MySQL (Docker Compose defaults)
 
