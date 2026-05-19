@@ -24,9 +24,9 @@ def db_session() -> Session:
         yield session
 
 
-def test_upsert_inserts_new_record(db_session: Session) -> None:
+def test_save_weather_inserts_new_record(db_session: Session) -> None:
     repo = WeatherRepository(db_session)
-    repo.upsert_weather(SAMPLE_WEATHER)
+    repo.save_weather(SAMPLE_WEATHER)
 
     record = db_session.scalar(
         select(WeatherRecord).where(WeatherRecord.city == "osaka")
@@ -38,11 +38,11 @@ def test_upsert_inserts_new_record(db_session: Session) -> None:
     assert record.wind_speed_mps == 3.2
 
 
-def test_upsert_updates_existing_record_for_same_city_and_day(
+def test_save_weather_inserts_multiple_records_for_same_city(
     db_session: Session,
 ) -> None:
     repo = WeatherRepository(db_session)
-    repo.upsert_weather(SAMPLE_WEATHER)
+    repo.save_weather(SAMPLE_WEATHER)
     updated = SAMPLE_WEATHER.model_copy(
         update={
             "temperature_celsius": 25.0,
@@ -51,13 +51,12 @@ def test_upsert_updates_existing_record_for_same_city_and_day(
             "wind_speed_mps": 4.0,
         }
     )
-    repo.upsert_weather(updated)
+    repo.save_weather(updated)
 
     rows = db_session.scalars(
         select(WeatherRecord).where(WeatherRecord.city == "osaka")
     ).all()
-    assert len(rows) == 1
-    assert rows[0].temperature_celsius == 25.0
-    assert rows[0].description == "mainly clear"
-    assert rows[0].humidity == 70
-    assert rows[0].wind_speed_mps == 4.0
+    assert len(rows) == 2
+    assert rows[0].temperature_celsius == 22.5
+    assert rows[1].temperature_celsius == 25.0
+    assert rows[1].description == "mainly clear"
