@@ -52,11 +52,13 @@ class WeatherHistoryResponse(BaseModel):
 
 class FavoriteCreateRequest(BaseModel):
     city: str = Field(..., min_length=1, description="City name to favorite")
+    memo: str | None = Field(default=None, description="Optional note for this city")
 
 
 class FavoriteItem(BaseModel):
     id: int = Field(..., description="Favorite record ID")
     city: str = Field(..., description="City name")
+    memo: str | None = Field(default=None, description="Optional note for this city")
     created_at: datetime = Field(..., description="When the favorite was added")
 
 

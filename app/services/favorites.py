@@ -17,6 +17,7 @@ def _to_item(record: Favorite) -> FavoriteItem:
     return FavoriteItem(
         id=record.id,
         city=record.city,
+        memo=record.memo,
         created_at=record.created_at,
     )
 
@@ -25,7 +26,9 @@ def _to_item(record: Favorite) -> FavoriteItem:
 class FavoritesService:
     repository: FavoriteRepository | None
 
-    def add_favorite(self, *, user_id: int, city: str) -> FavoriteItem:
+    def add_favorite(
+        self, *, user_id: int, city: str, memo: str | None = None
+    ) -> FavoriteItem:
         if self.repository is None:
             raise DatabaseUnavailableError("Database is not available")
 
@@ -33,7 +36,7 @@ class FavoritesService:
         if existing is not None:
             return _to_item(existing)
 
-        record = self.repository.add(user_id=user_id, city=city)
+        record = self.repository.add(user_id=user_id, city=city, memo=memo)
         return _to_item(record)
 
     def list_favorites(self, *, user_id: int) -> FavoriteListResponse:

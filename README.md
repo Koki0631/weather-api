@@ -241,7 +241,7 @@ TOKEN="..."  # from POST /auth/login
 curl -s -X POST "http://localhost:8000/favorites" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"city":"osaka"}'
+  -d '{"city":"osaka","memo":"Rainy season"}'
 
 # List favorites
 curl -s "http://localhost:8000/favorites" \
@@ -260,6 +260,7 @@ Sample list response:
     {
       "id": 1,
       "city": "osaka",
+      "memo": "Rainy season",
       "created_at": "2026-05-19T12:00:00+00:00"
     }
   ]

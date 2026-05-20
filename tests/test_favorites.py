@@ -73,13 +73,14 @@ async def test_add_favorite_success(favorites_client) -> None:
 
     response = await client.post(
         "/favorites",
-        json={"city": "osaka"},
+        json={"city": "osaka", "memo": "Rainy season"},
         headers=_auth_headers(),
     )
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["city"] == "osaka"
+    assert payload["memo"] == "Rainy season"
     assert payload["id"] is not None
     assert "created_at" in payload
 

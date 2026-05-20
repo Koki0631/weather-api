@@ -18,11 +18,12 @@ def db_session() -> Session:
 
 def test_add_and_list_by_user(db_session: Session) -> None:
     repo = FavoriteRepository(db_session)
-    record = repo.add(user_id=1, city=SAMPLE_CITY)
+    record = repo.add(user_id=1, city=SAMPLE_CITY, memo="note")
 
     assert record.id is not None
     assert record.user_id == 1
     assert record.city == SAMPLE_CITY
+    assert record.memo == "note"
 
     records = repo.list_by_user(user_id=1)
     assert len(records) == 1
