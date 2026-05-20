@@ -19,7 +19,7 @@ async def add_favorite(
     service: FavoritesService = Depends(get_favorites_service),
 ) -> FavoriteItem:
     try:
-        return service.add_favorite(user_id=user_id, city=body.city)
+        return service.add_favorite(user_id=user_id, city=body.city, memo=body.memo)
     except DatabaseUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

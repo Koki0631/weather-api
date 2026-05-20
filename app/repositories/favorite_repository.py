@@ -15,8 +15,8 @@ class FavoriteRepository:
         )
         return self._session.scalar(statement)
 
-    def add(self, *, user_id: int, city: str) -> Favorite:
-        record = Favorite(user_id=user_id, city=city)
+    def add(self, *, user_id: int, city: str, memo: str | None = None) -> Favorite:
+        record = Favorite(user_id=user_id, city=city, memo=memo)
         self._session.add(record)
 
         try:

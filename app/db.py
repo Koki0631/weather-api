@@ -47,15 +47,10 @@ def get_db() -> Generator[Session | None, None, None]:
 
 
 def init_db() -> None:
+    """Register ORM models. Schema is applied via Alembic (`alembic upgrade head`)."""
     from app.models.favorite import Favorite  # noqa: F401
     from app.models.user import User  # noqa: F401
     from app.models.weather import WeatherRecord  # noqa: F401
 
-    settings = get_settings()
-    if not settings.database_enabled:
+    if not get_settings().database_enabled:
         return
-
-    try:
-        Base.metadata.create_all(bind=get_engine(settings))
-    except Exception:
-        logger.exception("Failed to initialize database tables")

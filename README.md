@@ -27,6 +27,8 @@ A small [FastAPI](https://fastapi.tiangolo.com/) service that returns current we
 │   ├── repositories/   # Database access
 │   ├── routers/          # HTTP routes
 │   └── services/         # Business logic and external APIs
+├── alembic/              # Alembic migrations
+├── alembic.ini
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -61,13 +63,46 @@ The API listens on `http://localhost:8000`. Interactive docs: `http://localhost:
 
 The API container runs **uvicorn with `--reload`** and mounts `./app` into the container, so edits under `app/` are picked up automatically without rebuilding or restarting. Re-run `docker compose up --build` only when you change dependencies (`pyproject.toml` / `uv.lock`) or the `Dockerfile`.
 
-This starts **MySQL** (`db`) and the **API** (`api`). On startup the API seeds a **dev test user** (see [Login](#login)). Each authenticated `/weather` response is inserted into the `weather` table for that user (`user_id` plus the same fields as the JSON body). Repeated requests create new history rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
+This starts **MySQL** (`db`) and the **API** (`api`). The API container runs **`alembic upgrade head`** before uvicorn so the schema is applied from migrations (not `create_all`). On startup it also seeds a **dev test user** (see [Login](#login)). Each authenticated `/weather` response is inserted into the `weather` table for that user (`user_id` plus the same fields as the JSON body). Repeated requests create new history rows. If MySQL is unavailable, the API still returns weather data (persistence is best-effort).
 
 ### Local (uv)
 
 ```bash
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+## Database migrations (Alembic)
+
+Schema changes are managed with [Alembic](https://alembic.sqlalchemy.org/). Migrations use the same `DATABASE_URL` as the app and autogenerate from SQLAlchemy models in `app/models/` (`target_metadata` = `app.db.Base.metadata`).
+
+Apply all pending migrations:
+
+```bash
+uv run alembic upgrade head
+```
+
+Create a new revision from model changes (review the generated script before committing):
+
+```bash
+uv run alembic revision --autogenerate -m "describe your change"
+```
+
+Other useful commands:
+
+```bash
+uv run alembic current          # show current revision
+uv run alembic history          # list revisions
+```
+
+**Existing database** created before Alembic (tables already present): stamp the current revision without running DDL:
+
+```bash
+uv run alembic stamp head
+```
+
+**Fresh local MySQL** (Docker): `docker compose up` runs `alembic upgrade head` automatically. If you reset the DB volume (`docker compose down -v`), migrations reapply on the next start.
+
+Initial migration creates: `users`, `weather`, `favorites`.
 
 ## Tests
 
@@ -206,7 +241,7 @@ TOKEN="..."  # from POST /auth/login
 curl -s -X POST "http://localhost:8000/favorites" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"city":"osaka"}'
+  -d '{"city":"osaka","memo":"Rainy season"}'
 
 # List favorites
 curl -s "http://localhost:8000/favorites" \
@@ -225,6 +260,7 @@ Sample list response:
     {
       "id": 1,
       "city": "osaka",
+      "memo": "Rainy season",
       "created_at": "2026-05-19T12:00:00+00:00"
     }
   ]
