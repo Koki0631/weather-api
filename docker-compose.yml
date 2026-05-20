@@ -8,6 +8,8 @@ services:
       MYSQL_PASSWORD: weather
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 5s
@@ -37,3 +39,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+volumes:
+  mysql_data:
