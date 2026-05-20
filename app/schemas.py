@@ -48,3 +48,20 @@ class WeatherHistoryResponse(BaseModel):
         default_factory=list,
         description="Stored weather records, newest first",
     )
+
+
+class FavoriteCreateRequest(BaseModel):
+    city: str = Field(..., min_length=1, description="City name to favorite")
+
+
+class FavoriteItem(BaseModel):
+    id: int = Field(..., description="Favorite record ID")
+    city: str = Field(..., description="City name")
+    created_at: datetime = Field(..., description="When the favorite was added")
+
+
+class FavoriteListResponse(BaseModel):
+    items: list[FavoriteItem] = Field(
+        default_factory=list,
+        description="Favorite cities for the authenticated user, newest first",
+    )

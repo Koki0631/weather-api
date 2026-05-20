@@ -184,7 +184,7 @@ curl -s -X POST "http://localhost:8000/auth/login" \
   -d '{"email":"test@example.com","password":"testpassword"}'
 ```
 
-Save the `access_token` from the response for `/weather` and `/weather/history` requests.
+Save the `access_token` from the response for `/weather`, `/weather/history`, and `/favorites` requests.
 
 Sample response:
 
@@ -192,6 +192,42 @@ Sample response:
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "bearer"
+}
+```
+
+### Favorites
+
+Manage favorite cities per authenticated user (JWT required). Duplicate cities for the same user are ignored on `POST` (idempotent).
+
+```bash
+TOKEN="..."  # from POST /auth/login
+
+# Add a city
+curl -s -X POST "http://localhost:8000/favorites" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"city":"osaka"}'
+
+# List favorites
+curl -s "http://localhost:8000/favorites" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Remove a city
+curl -s -X DELETE "http://localhost:8000/favorites/osaka" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Sample list response:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "city": "osaka",
+      "created_at": "2026-05-19T12:00:00+00:00"
+    }
+  ]
 }
 ```
 
