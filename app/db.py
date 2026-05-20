@@ -47,6 +47,7 @@ def get_db() -> Generator[Session | None, None, None]:
 
 
 def init_db() -> None:
+    from app.models.favorite import Favorite  # noqa: F401
     from app.models.user import User  # noqa: F401
     from app.models.weather import WeatherRecord  # noqa: F401
 
